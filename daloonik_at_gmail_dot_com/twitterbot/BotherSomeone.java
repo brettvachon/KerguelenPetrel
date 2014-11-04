@@ -81,8 +81,7 @@ public class BotherSomeone extends Thread
 	   {
            tweet = "";
 	   tweet = this.bother();
-	   if (tweet.length() > 140 || tweet.length() == 0)
-		   ; //discard tweet
+	   if (tweet.length() > 140 || tweet.length() == 0); //discard tweet
 	   else
 	      {
               try 

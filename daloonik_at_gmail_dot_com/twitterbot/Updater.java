@@ -3,14 +3,18 @@ package daloonik_at_gmail_dot_com.twitterbot;
  * Updater
  */
 
+import java.util.Random;
+
+import twitter4j.Trends;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
+
 
 public class Updater extends Thread
  {
  private GetLine sentences;
  private String feedfile;
- private Twitter twitterbacon;
+ private Twitter bacon;
  private int sleeptime;
  
  /**
@@ -24,6 +28,7 @@ public class Updater extends Thread
    String update = "";
    StringBuffer buffer = new StringBuffer();  
    GetFeed feed = new GetFeed(feedfile);
+   Random r = new Random();
    do
 	 {	
 	 buffer.setLength(0);
@@ -36,22 +41,36 @@ public class Updater extends Thread
 	
 	   //Now find sentence starting with lowercase letter and append.
 	   while(Character.isUpperCase(temp.charAt(0)))
-	   temp = sentences.line();    
+	      {
+          temp = sentences.line();   
+          }    
 	   buffer.append(" - " + temp + ".");
 	   }
-		
 	     
 	 else if(Character.isLowerCase(buffer.charAt(0)))
 	   {
 	   buffer.insert(0,(feed.title() + ", "));
 	   buffer.append(".");
-	   }
-	     					
+	   }    	
+	 /*add hashtag to short tweets */
+	 if(buffer.length() < 120)
+       {
+       try
+         {
+          Trends t = bacon.getPlaceTrends(1);  //global trends
+   	      buffer.append(" "+t.getTrends()[r.nextInt(t.getTrends().length)].getName());
+          }
+       catch(TwitterException e)
+          {
+          System.out.println("Failed to add trend to tweet");
+          e.printStackTrace();
+          }		 
+       }
+	 
 	 update = buffer.toString();
      } while (update.length() > 140);
 
    return update;
-   /*if(update.length() < 120)  */ //do something with hashtags
    }	
  
 	/** Updater sets local variables
@@ -64,7 +83,7 @@ public class Updater extends Thread
      {
 	 this.feedfile = feedfile;
 	 this.sentences = new GetLine(sentencefile);
-	 this.twitterbacon = t;
+	 this.bacon = t;
 	 this.sleeptime = time;
 	 }
  
@@ -76,7 +95,7 @@ public class Updater extends Thread
 	   tweet = this.status();
 	      try 
           {
-          twitterbacon.updateStatus(tweet);
+          bacon.updateStatus(tweet);
           System.out.println("Tweet posted: "+tweet);
           } 
        catch (TwitterException e) 

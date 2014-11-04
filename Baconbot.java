@@ -59,9 +59,8 @@ public class Baconbot
          {
          if (lastPostId < mention.getId()) 
             {
-            if(mention.getUser().getId() == bacon.getId());  //don't respond to myself
-            if(mention.isRetweeted()); //don't respond to retweet
-
+            if(mention.getUser().getId() == bacon.getId()); //don't respond to myself
+            else if(mention.isRetweeted()); //don't respond to retweet
             else
                {
                 if(mention.getText().toLowerCase().contains("bye")) 
@@ -108,10 +107,10 @@ public class Baconbot
  
  public Baconbot(Twitter bacon) 
    {
-   BotherSomeone bother = new BotherSomeone(bacon, 200000);
+   BotherSomeone bother = new BotherSomeone(bacon, 154020); 
 
-   Updater en = new Updater(sentenceFileEnglish, feedsFileEnglish, bacon, 210050);
-   Updater fr = new Updater(sentenceFileFrench, feedsFileFrench, bacon, 350085);
+   Updater en = new Updater(sentenceFileEnglish, feedsFileEnglish, bacon, 350040);
+   Updater fr = new Updater(sentenceFileFrench, feedsFileFrench, bacon, 360010);
    
    en.start();
    fr.start();
@@ -140,10 +139,10 @@ public class Baconbot
       System.out.println("Starting Bacon Bot...");
       ConfigurationBuilder twitterConfigBuilder = new ConfigurationBuilder();		
       twitterConfigBuilder.setDebugEnabled(false);
-      twitterConfigBuilder.setOAuthConsumerKey("consumerkey");
-      twitterConfigBuilder.setOAuthConsumerSecret("consumersecret");
-      twitterConfigBuilder.setOAuthAccessToken("accesstoken");
-      twitterConfigBuilder.setOAuthAccessTokenSecret("accesstokensecret");
+      twitterConfigBuilder.setOAuthConsumerKey("ConsumerKey");
+      twitterConfigBuilder.setOAuthConsumerSecret("ConsumerSecret");
+      twitterConfigBuilder.setOAuthAccessToken("AccessToken");
+      twitterConfigBuilder.setOAuthAccessTokenSecret("AccesTokenSecret");
 		
       Twitter bacon = new TwitterFactory(twitterConfigBuilder.build()).getInstance();
       new Baconbot(bacon);

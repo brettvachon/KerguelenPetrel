@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cronentries>
+  <cron>
+    <url>/cron/BaconbotUpdateEnglishServlet</url>
+    <description>Twitter post in English every 5 minutes</description>
+    <schedule>every 5 minutes</schedule>
+  </cron>
+  <cron>
+    <url>/cron/BaconbotUpdateFrenchServlet</url>
+    <description>Twitter post in French every 6 minutes</description>
+    <schedule>every 6 minutes</schedule>
+  </cron>
+  <cron>
+    <url>/cron/BaconbotResponseServlet</url>
+    <description>Check and respond to Twitter user</description>
+    <schedule>every 5 minutes</schedule>
+  </cron>
+  <cron>
+    <url>/cron/BaconbotBotherSomeoneServlet</url>
+    <description>Bother a random Twitter user</description>
+    <schedule>every 5 minutes</schedule>
+  </cron>
+</cronentries>

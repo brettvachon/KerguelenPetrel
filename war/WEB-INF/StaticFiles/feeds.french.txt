@@ -1,0 +1,16 @@
+http://www.ledevoir.com/rss/section/politique/montreal.xml
+http://rss.lemonde.fr/c/205/f/3052/index.rss
+http://rss.lemonde.fr/c/205/f/3057/index.rss
+http://rss.lemonde.fr/c/205/f/3052/index.rss
+http://rss.lemonde.fr/c/205/f/3053/index.rss
+http://rss.lemonde.fr/c/205/f/3060/index.rss
+http://rss.lemonde.fr/c/205/f/3059/index.rss
+http://www.ledevoir.com/rss/section/societe/medias.xml
+http://www.ledevoir.com/rss/section/economie.xml
+http://www.france24.com/fr/moyen-orient/rss
+http://www.france24.com/fr/monde/rss
+http://www.france24.com/fr/ameriques/rss
+http://www.rfi.fr/sportfr/pages/001/accueil.xml
+http://fr.canoe.ca/rss/feed/nouvelles/amour_sexualite.xml
+http://fr.canoe.ca/rss/feed/nouvelles/famille.xml
+http://fr.canoe.ca/rss/feed/nouvelles/sante.xml

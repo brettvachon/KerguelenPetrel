@@ -5,36 +5,28 @@ xmlns:web="http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd"
 xsi:schemaLocation="http://java.sun.com/xml/ns/javaee
 http://java.sun.com/xml/ns/javaee/web-app_2_5.xsd" version="2.5">
 	<servlet>
-		<servlet-name>BaconbotUpdateEnglishServlet</servlet-name>
-		<servlet-class>baconbot_daloonik.BaconbotUpdateEnglishServlet</servlet-class>
+		<servlet-name>UpdateStatusServlet</servlet-name>
+		<servlet-class>twitfeedbot.UpdateStatusServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
-		<servlet-name>BaconbotUpdateEnglishServlet</servlet-name>
-		<url-pattern>/cron/BaconbotUpdateEnglishServlet</url-pattern>
+		<servlet-name>UpdateStatusServlet</servlet-name>
+		<url-pattern>/cron/UpdateStatusServlet</url-pattern>
 	</servlet-mapping>
 	<servlet>
-		<servlet-name>BaconbotUpdateFrenchServlet</servlet-name>
-		<servlet-class>baconbot_daloonik.BaconbotUpdateFrenchServlet</servlet-class>
+		<servlet-name>BotherSomeoneServlet</servlet-name>
+		<servlet-class>twitfeedbot.BotherSomeoneServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
-		<servlet-name>BaconbotUpdateFrenchServlet</servlet-name>
-		<url-pattern>/cron/BaconbotUpdateFrenchServlet</url-pattern>
+		<servlet-name>BotherSomeoneServlet</servlet-name>
+		<url-pattern>/cron/BotherSomeoneServlet</url-pattern>
 	</servlet-mapping>
 	<servlet>
-		<servlet-name>BaconbotResponseServlet</servlet-name>
-		<servlet-class>baconbot_daloonik.BaconbotResponseServlet</servlet-class>
+		<servlet-name>RespondServlet</servlet-name>
+		<servlet-class>twitfeedbot.RespondServlet</servlet-class>
 	</servlet>
 	<servlet-mapping>
-		<servlet-name>BaconbotResponseServlet</servlet-name>
-		<url-pattern>/cron/BaconbotResponseServlet</url-pattern>
-	</servlet-mapping>
-	<servlet>
-		<servlet-name>BaconbotBotherSomeoneServlet</servlet-name>
-		<servlet-class>baconbot_daloonik.BaconbotBotherSomeoneServlet</servlet-class>
-	</servlet>
-	<servlet-mapping>
-		<servlet-name>BaconbotBotherSomeoneServlet</servlet-name>
-		<url-pattern>/cron/BaconbotBotherSomeoneServlet</url-pattern>
+		<servlet-name>RespondServlet</servlet-name>
+		<url-pattern>/cron/RespondServlet</url-pattern>
 	</servlet-mapping>
 	<welcome-file-list>
 		<welcome-file>index.html</welcome-file>

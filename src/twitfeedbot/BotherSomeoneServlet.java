@@ -104,7 +104,7 @@ public class BotherSomeoneServlet extends HttpServlet
             }
          buffer.append(t.getTrends()[r.nextInt(t.getTrends().length)].getName());
 
-         //twit.updateStatus(buffer.toString());
+         twit.updateStatus(buffer.toString());
          resp.getWriter().println("Tweet posted: "+buffer.toString() +"<br>"); 
          }
        } 

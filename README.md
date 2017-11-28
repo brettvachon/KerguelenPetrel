@@ -13,6 +13,7 @@ List of servlets:
   - FriendSomeoneServlet - Chooses a follower to friend and tweets that user
   - RespondServlet - Checks for a response and responds accordingly
   - UnfriendSomeoneServlet - Chooses a follower to unfriend
+  - UpdateStatusServlet - Updates the status with a sentence from Wordnik and an RSS feed title
 
   You can modify the frequency of the bot's performance of each of those Servlets in the `cron.xml` file.
 

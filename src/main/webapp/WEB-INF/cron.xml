@@ -6,29 +6,46 @@
     <schedule>every 6 minutes from 9:03 to 16:12</schedule>
     <timezone>America/New_York</timezone>
   </cron>
+  
   <cron>
      <url>/cron/UpdateStatusServlet</url>
      <description>Update the Twitter status</description> 
      <schedule>every 12 minutes from 19:08 to 20:58</schedule>
      <timezone>America/New_York</timezone>
   </cron>
+  
   <cron>
     <url>/cron/RespondServlet</url>
     <description>Check and respond to Twitter user</description>
     <schedule>every 6 minutes from 09:00 to 20:00</schedule>
     <timezone>America/New_York</timezone>
   </cron>
+  
   <cron>
     <url>/cron/BotherSomeoneServlet</url>
     <description>Bother a random Twitter user</description>
     <schedule>every 9 minutes from 12:10 to 18:22</schedule>
     <timezone>America/New_York</timezone>
   </cron>
+  
   <cron>
     <url>/cron/BotherSomeoneServlet</url>
     <description>Bother a random Twitter user</description>
     <schedule>every 12 minutes from 20:11 to 21:43</schedule>
     <timezone>America/New_York</timezone>
   </cron>
+  
+  <cron>
+    <url>/cron/FriendSomeoneServlet</url>
+    <description>Friend a random Twitter user</description>
+    <schedule>every 52 hours</schedule>
+  </cron>
+  
+    <cron>
+    <url>/cron/UnfriendSomeoneServlet</url>
+    <description>Unfriend a random Twitter user</description>
+    <schedule>every 432 hours</schedule>
+  </cron>
+  
 </cronentries>
 

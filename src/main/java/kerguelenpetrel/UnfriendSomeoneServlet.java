@@ -35,7 +35,6 @@ public class UnfriendSomeoneServlet extends HttpServlet
    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException 
       {
       User unfriend = null;  
-
       Random r = new Random();   
 
       resp.setContentType("text/plain; charset=UTF-8");

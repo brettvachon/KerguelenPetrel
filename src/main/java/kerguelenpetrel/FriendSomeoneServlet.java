@@ -72,7 +72,7 @@ public class FriendSomeoneServlet extends HttpServlet
         resp.getWriter().println("Made a new friend with @"+friend.getScreenName());
         
         //Write to our new friend
-        StringBuilder builder = new StringBuilder(140);   //Tweets are 140 characters
+        StringBuilder builder = new StringBuilder(280);   //Tweets are 280 characters
         builder.append("@" + friend.getScreenName());
         builder.append(" ");
         
@@ -80,12 +80,12 @@ public class FriendSomeoneServlet extends HttpServlet
         GetFeed feed = new GetFeed(feedsFile); 
         builder.append(feed.description());
         
-        if(builder.length() > 140) //Tweets are a maximum of 140 characters
+        if(builder.length() > 280) //Tweets are a maximum of 280 characters
            {
            builder.setLength(0);
            builder.append("@" + friend.getScreenName());
-           builder.append(" ");
-           builder.append("hi!");
+           builder.append(" hi!");
+           builder.append(" "+twit.getPlaceTrends(1).getTrends()[r.nextInt(twit.getPlaceTrends(1).getTrends().length)].getName());
            }
         twit.updateStatus(builder.toString());
         resp.getWriter().println("Posted to new friend: "+builder.toString() +"\n"); 

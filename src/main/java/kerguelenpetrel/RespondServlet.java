@@ -46,7 +46,6 @@ import net.jeremybrooks.knicker.WordsApi;
 
 public class RespondServlet extends HttpServlet
  {
-
  private static DatastoreService datastore = DatastoreServiceFactory.getDatastoreService();
  private static Entity lastPostIdEntity;
  private static long lastPostId = 0;
@@ -56,9 +55,7 @@ public class RespondServlet extends HttpServlet
  @Override
  public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException 
    {
-
    Random r = new Random();
-   StringBuilder builder = new StringBuilder(140);   //Tweets are 140 characters
    resp.setContentType("text/plain; charset=UTF-8");
    
    try 
@@ -66,6 +63,7 @@ public class RespondServlet extends HttpServlet
      //Get the Twitter object
      Twitter twit = TwitterFactory.getSingleton();
      ResponseList<Status> mentions = twit.getMentionsTimeline();
+     StringBuilder builder = new StringBuilder(280);   //Tweets are 280 characters
 
      lastPostIdEntity = datastore.get(KeyFactory.createKey("lastPostIDEntity", "ID"));
      lastPostId = Long.parseLong(lastPostIdEntity.getProperty("lastPostID").toString());
@@ -88,7 +86,7 @@ public class RespondServlet extends HttpServlet
                {
                builder.insert(0, "@");
                builder.append(mention.getUser().getScreenName());
-               builder.append("Ok. Bye");
+               builder.append(" Bye");
                }
             else
                {
@@ -105,11 +103,13 @@ public class RespondServlet extends HttpServlet
                InputStream in = RespondServlet.class.getResourceAsStream("wordnik.properties");
                p.load(in);
                System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
-               builder.append(" #");
-               builder.append(WordsApi.randomWord().getWord());
-               if(builder.length() > 140)
+               
+               // Make up a trend by combining two words
+               builder.append(" #" + WordsApi.randomWord().getWord() + WordsApi.randomWord().getWord());
+               if(builder.length() > 280)
                   {
-                  builder.setLength(builder.lastIndexOf(" ", 120));  //Tweets are maximum 140 characters
+                   /* Tweets are maximum 280 characters */
+                  builder.setLength(builder.lastIndexOf(" ", 270));  
                   builder.append(end[(r.nextInt(end.length))]);
                   }
                }

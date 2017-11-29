@@ -90,15 +90,16 @@ public class BotherSomeoneServlet extends HttpServlet
        System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
        builder.append(WordApi.topExample(WordsApi.randomWord().getWord()).getText());
        
-       if(builder.length() > 140) //Tweets are maximum 140 characters
+       /* Tweets are maximum 280 characters, so trim our sentence appropriately */
+       if(builder.length() > 280) 
           {
-          if(builder.lastIndexOf(";",110) > 0)
-             builder.setLength(builder.lastIndexOf(";",110)); 
-          else if(builder.lastIndexOf(":",110) > 0)
-             builder.setLength(builder.lastIndexOf(":", 110));  
-          else if(builder.lastIndexOf(",",110) > 0)
-             builder.setLength(builder.lastIndexOf(",", 110));
-          else builder.setLength(110);
+          if(builder.lastIndexOf(";",220) > 0)
+             builder.setLength(builder.lastIndexOf(";",220)); 
+          else if(builder.lastIndexOf(":",220) > 0)
+             builder.setLength(builder.lastIndexOf(":", 220));  
+          else if(builder.lastIndexOf(",",220) > 0)
+             builder.setLength(builder.lastIndexOf(",", 220));
+          else builder.setLength(220);
           }
          
        //Append some global trends
@@ -106,8 +107,8 @@ public class BotherSomeoneServlet extends HttpServlet
        builder.append(" ");
        builder.append(t.getTrends()[r.nextInt(t.getTrends().length)].getName());
          
-       if(builder.length() > 140)
-          builder.setLength(140); //Tweets are limited to 140 characters
+       if(builder.length() > 280)
+          builder.setLength(280); //Tweets are limited to 280 characters
 
        twit.updateStatus(builder.toString());
        

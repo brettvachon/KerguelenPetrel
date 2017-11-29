@@ -56,7 +56,8 @@ public class UpdateStatusServlet extends HttpServlet
      {
      resp.getWriter().println("Updating status...");
 
-     StringBuilder builder = new StringBuilder(140);   //Tweets are 140 characters
+     StringBuilder builder = new StringBuilder(280);   //Tweets are 280 characters
+     
      //Append feed title
      GetFeed feed = new GetFeed(feedsFile); 
      builder.append(feed.title());
@@ -70,15 +71,16 @@ public class UpdateStatusServlet extends HttpServlet
      
      builder.append(WordApi.topExample(WordsApi.randomWord().getWord()).getText());
     
-     if(builder.length() > 140) //Tweets are maximum 140 characters
+    /* Tweets are maximum 280 characters, so trim our sentence appropriately */
+     if(builder.length() > 280) 
         {
-        if(builder.lastIndexOf(";",110) > 0)
-           builder.setLength(builder.lastIndexOf(";",110)); 
-        else if(builder.lastIndexOf(":",110) > 0)
-           builder.setLength(builder.lastIndexOf(":", 110));  
-        else if(builder.lastIndexOf(",",110) > 0)
-           builder.setLength(builder.lastIndexOf(",", 110));
-        else builder.setLength(110);
+        if(builder.lastIndexOf(";",220) > 0)
+           builder.setLength(builder.lastIndexOf(";",220)); 
+        else if(builder.lastIndexOf(":",220) > 0)
+           builder.setLength(builder.lastIndexOf(":", 220));  
+        else if(builder.lastIndexOf(",",220) > 0)
+           builder.setLength(builder.lastIndexOf(",", 220));
+        else builder.setLength(220);
         }
      //Append a Global trend
      Twitter twit = TwitterFactory.getSingleton();
@@ -87,11 +89,10 @@ public class UpdateStatusServlet extends HttpServlet
      // Make up a trend by combining two words
      builder.append(" #" + WordsApi.randomWord().getWord() + WordsApi.randomWord().getWord());
           
-     if(builder.length() > 140)
-        builder.setLength(140); //Tweets are limited to 140 characters
+     if(builder.length() > 280)       
+        builder.setLength(280); //Tweets are limited to 280 characters
      
      //Update the Twitter status
-     
      twit.updateStatus(builder.toString());
      resp.getWriter().println("Tweet posted: "+ builder.toString());
      }

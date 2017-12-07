@@ -27,6 +27,7 @@ import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.ResponseList;
 import twitter4j.Status;
+import twitter4j.StatusUpdate;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -41,6 +42,7 @@ import com.google.appengine.api.datastore.KeyFactory;
 import net.jeremybrooks.knicker.KnickerException;
 import net.jeremybrooks.knicker.WordsApi;
 
+import com.rometools.rome.io.FeedException;
 
 @SuppressWarnings("serial")
 
@@ -51,11 +53,13 @@ public class RespondServlet extends HttpServlet
  private static long lastPostId = 0;
  public static final String feedsFile = "WEB-INF/StaticFiles/feeds";
  private static String[] end = { "?","!"," :-)","...","?!"};
+ public static final String[] separator = new String[] { "?","!",",","-"," " };
+ public static final Random r = new Random();
  
  @Override
  public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException 
    {
-   Random r = new Random();
+   StringBuilder builder = new StringBuilder();   
    resp.setContentType("text/plain; charset=UTF-8");
    
    try 
@@ -63,7 +67,6 @@ public class RespondServlet extends HttpServlet
      //Get the Twitter object
      Twitter twit = TwitterFactory.getSingleton();
      ResponseList<Status> mentions = twit.getMentionsTimeline();
-     StringBuilder builder = new StringBuilder(280);   //Tweets are 280 characters
 
      lastPostIdEntity = datastore.get(KeyFactory.createKey("lastPostIDEntity", "ID"));
      lastPostId = Long.parseLong(lastPostIdEntity.getProperty("lastPostID").toString());
@@ -84,7 +87,8 @@ public class RespondServlet extends HttpServlet
                mention = twit.createFavorite(mention.getId()); //mark the retweet as a favourite
             else if(mention.getText().toLowerCase().contains("bye")) 
                {
-               builder.insert(0, "@");
+               builder.setLength(0);
+               builder.append("@");
                builder.append(mention.getUser().getScreenName());
                builder.append(" Bye");
                }
@@ -92,62 +96,106 @@ public class RespondServlet extends HttpServlet
                {
                builder.setLength(0);
                //Add the screen name of the person we are responding to
-               builder.insert(0, "@" + mention.getUser().getScreenName() + " ");
+               builder.append("@"); 
+               builder.append(mention.getUser().getScreenName() + " ");
                
-               //Append feed contents
-               GetFeed feed = new GetFeed(feedsFile); 
-               builder.append(feed.title());
+               //Get feed title as content
+               builder.append(getFeedTitle(resp));
+                             
+               //Get a Wordnik trend
+               builder.append(getWordnikTrend(resp));
                
-               //Append random word from Wordnik as hashtag
-               Properties p = new Properties();
-               InputStream in = RespondServlet.class.getResourceAsStream("wordnik.properties");
-               p.load(in);
-               System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
-               
-               // Make up a trend by combining two words
-               builder.append(" #" + WordsApi.randomWord().getWord() + WordsApi.randomWord().getWord());
+               /* Tweets are maximum 280 characters */
                if(builder.length() > 280)
                   {
-                   /* Tweets are maximum 280 characters */
                   builder.setLength(builder.lastIndexOf(" ", 270));  
                   builder.append(end[(r.nextInt(end.length))]);
                   }
                }
-           twit.updateStatus(builder.toString());
-           resp.getWriter().println("Tweet posted: \n");
-           resp.getWriter().println(builder.toString());
+            //Set the status
+            StatusUpdate status = new StatusUpdate(builder.toString());
+            
+            //Post the status
+            twit.updateStatus(status);
+            resp.getWriter().println("Tweet posted: "+ status.getStatus());
             }
          }
        //Save last post ID
        lastPostIdEntity.setProperty("lastPostID", (Long.toString(mentions.get(0).getId())));
        datastore.put(lastPostIdEntity);
        }
-   catch(FileNotFoundException e)
+     catch (EntityNotFoundException e) 
+       {
+       // Make new ResponseIDentity
+       lastPostIdEntity = new Entity("lastPostIDEntity", "ID");
+       lastPostIdEntity.setProperty("lastPostID", "0");
+       datastore.put(lastPostIdEntity);
+       resp.getWriter().println("Made new lastPostId " +lastPostIdEntity.getProperty("lastPostID").toString());
+       }
+    catch(TwitterException e)
       {
-      resp.getWriter().println("Input file(s) not found \n");
+      resp.getWriter().println("Problem with Twitter \n");
       e.printStackTrace(resp.getWriter());
       }
-   catch (EntityNotFoundException e) 
-     {
-     // Make new ResponseIDentity
-     lastPostIdEntity = new Entity("lastPostIDEntity", "ID");
-     lastPostIdEntity.setProperty("lastPostID", "533739405236649984");
-     datastore.put(lastPostIdEntity);
+    }
+ 
+ public static String getFeedTitle(HttpServletResponse resp) throws IOException
+    {
+    StringBuilder builder = new StringBuilder();
+      try 
+        {
+        GetFeed feed = new GetFeed(feedsFile); 
+        builder.append(feed.title());
+        builder.append(separator[(r.nextInt(separator.length))] + " ");
+        }
+      catch(FileNotFoundException e)
+        {
+        resp.getWriter().println("Input file(s) not found \n");
+        e.printStackTrace(resp.getWriter());
+        }
+      catch(FeedException e)
+        {
+        resp.getWriter().println("Problem with RSS Feed \n");
+        e.printStackTrace(resp.getWriter());
+        }
+      return builder.toString();
      }
-   catch(TwitterException e)
-     {
-     resp.getWriter().println("Problem with Twitter \n");
-     e.printStackTrace(resp.getWriter());
-     }
-   catch(KnickerException e)
-      {
-      resp.getWriter().println("Problem with Wordnik \n");
-      e.printStackTrace(resp.getWriter());
-      }
-   catch(Exception e)
-     {
-     resp.getWriter().println("Problem! \n");
-     e.printStackTrace(resp.getWriter());
-     }
-   }
- }
+ 
+ public static String getWordnikTrend(HttpServletResponse resp) throws IOException
+    {
+    StringBuilder trend = new StringBuilder();
+    String[] results = new String[2]; //Trend will be made up of 2 words
+ 
+    try
+       {
+       Properties p = new Properties();
+       InputStream in = UpdateStatusServlet.class.getResourceAsStream("wordnik.properties");
+       p.load(in);
+       System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
+       }
+    catch(FileNotFoundException e)
+       {
+       resp.getWriter().println("Wordnik property file not found \n");
+       e.printStackTrace(resp.getWriter());
+       }
+    try
+       {
+       for(int i=0; i<results.length;i++)
+          {
+          results[i] = WordsApi.randomWord().getWord();
+          while(results[i].contains("-")) //reject words with dashes
+             results[i] = WordsApi.randomWord().getWord();
+          }
+       //Build the trend
+       trend.append(" #");
+       for(String res : results)
+          trend.append(res);
+       }
+    catch(KnickerException e)
+       {
+       resp.getWriter().println("Problem with Wordnik \n");
+       e.printStackTrace(resp.getWriter());
+       }  
+    return trend.toString(); 
+    }
+  }

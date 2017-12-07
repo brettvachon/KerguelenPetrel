@@ -13,6 +13,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
+
 package kerguelenpetrel;
 
 import java.io.FileNotFoundException;
@@ -23,8 +24,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import com.sun.syndication.io.FeedException;
+import com.rometools.rome.io.FeedException;
 
+import twitter4j.StatusUpdate;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
@@ -35,13 +37,11 @@ public class FriendSomeoneServlet extends HttpServlet
    {
    public static final long cursor = -1;
    public static final String feedsFile = "WEB-INF/StaticFiles/feeds";
+   public static final Random r = new Random();   
    
    public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException 
      {
      User friend = null;  
-
-     Random r = new Random();   
-
      resp.setContentType("text/plain; charset=UTF-8");
      try 
         {
@@ -72,45 +72,47 @@ public class FriendSomeoneServlet extends HttpServlet
         resp.getWriter().println("Made a new friend with @"+friend.getScreenName());
         
         //Write to our new friend
-        StringBuilder builder = new StringBuilder(280);   //Tweets are 280 characters
-        builder.append("@" + friend.getScreenName());
-        builder.append(" ");
-        
-        //Append feed description
-        GetFeed feed = new GetFeed(feedsFile); 
-        builder.append(feed.description());
-        
-        if(builder.length() > 280) //Tweets are a maximum of 280 characters
-           {
-           builder.setLength(0);
-           builder.append("@" + friend.getScreenName());
-           builder.append(" hi!");
-           builder.append(" "+twit.getPlaceTrends(1).getTrends()[r.nextInt(twit.getPlaceTrends(1).getTrends().length)].getName());
-           }
-        twit.updateStatus(builder.toString());
-        resp.getWriter().println("Posted to new friend: "+builder.toString() +"\n"); 
+        StatusUpdate status = new StatusUpdate(writeToFriend(friend.getScreenName(), resp));
+        twit.updateStatus(status);
+        resp.getWriter().println("Tweet posted: "+ status.getStatus());
         }
      catch(TwitterException e)
         {
         resp.getWriter().println("Problem with Twitter \n");
         e.printStackTrace(resp.getWriter());
         }
-     catch(FileNotFoundException e)
-        {
-        resp.getWriter().println("Input file(s) not found \n");
-        e.printStackTrace(resp.getWriter());
-        }
-     catch(FeedException e)
-        {
-        resp.getWriter().println("Problem with RSS Feed \n");
-        e.printStackTrace(resp.getWriter());
-        }
-     
-     catch(Exception e)
-        {
-        resp.getWriter().println("Problem! \n");
-        e.printStackTrace(resp.getWriter());
-        }  
-        
      }
-   }
+   
+     public String writeToFriend(String friendScreenName, HttpServletResponse resp) throws IOException
+        {
+        StringBuilder builder = new StringBuilder();       
+        try
+           {
+           builder.append("@" + friendScreenName);
+           builder.append(" ");
+        
+           //Append feed description
+           GetFeed feed = new GetFeed(feedsFile); 
+           builder.append(feed.description());
+        
+           if(builder.length() > 280) //Tweets are a maximum of 280 characters
+             {
+             builder.setLength(0);
+             builder.append("@" + friendScreenName);
+             builder.append(" hi!");
+           }
+         }
+       catch(FeedException e)
+          {
+          resp.getWriter().println("Problem with RSS Feed \n");
+          e.printStackTrace(resp.getWriter());
+          }
+        catch(FileNotFoundException e)
+          {
+          resp.getWriter().println("Input file(s) not found \n");
+          e.printStackTrace(resp.getWriter());
+          } 
+       
+       return builder.toString();
+       }
+    }

@@ -23,8 +23,8 @@ import java.io.FileNotFoundException;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
+import twitter4j.StatusUpdate;
 import twitter4j.Trends;
-import twitter4j.User;
 
 import java.util.Properties;
 import java.util.Random;
@@ -42,16 +42,13 @@ import net.jeremybrooks.knicker.WordsApi;
 public class BotherSomeoneServlet extends HttpServlet
  {
  public static final long cursor = -1;
+ public static final Random r = new Random();
 
  @Override
  public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException 
    {
-
    StringBuilder builder = new StringBuilder();
-   User victim = null;  
-
    long[] friendIDs, victimIDs;
-   Random r = new Random();   
 
    resp.setContentType("text/plain; charset=UTF-8");
    try 
@@ -77,65 +74,69 @@ public class BotherSomeoneServlet extends HttpServlet
          return;
         }
        
-       //Get a user to bother
-       victim = twit.showUser(victimIDs[r.nextInt(victimIDs.length)]);
+     //Write to our victim
+     String victim = twit.showUser(victimIDs[r.nextInt(victimIDs.length)]).getScreenName();
        
-       //Mention the user
-       builder.append("@" + victim.getScreenName() + " ");
-       
-       //Append Wordnik example sentence
-       Properties p = new Properties();
-       InputStream in = BotherSomeoneServlet.class.getResourceAsStream("wordnik.properties");
-       p.load(in);
-       System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
-       builder.append(WordApi.topExample(WordsApi.randomWord().getWord()).getText());
-       
-       /* Tweets are maximum 280 characters, so trim our sentence appropriately */
-       if(builder.length() > 280) 
-          {
-          if(builder.lastIndexOf(";",220) > 0)
-             builder.setLength(builder.lastIndexOf(";",220)); 
-          else if(builder.lastIndexOf(":",220) > 0)
-             builder.setLength(builder.lastIndexOf(":", 220));  
-          else if(builder.lastIndexOf(",",220) > 0)
-             builder.setLength(builder.lastIndexOf(",", 220));
-          else builder.setLength(220);
-          }
-         
-       //Append some global trends
-       Trends t = twit.getPlaceTrends(1);  
-       builder.append(" ");
-       builder.append(t.getTrends()[r.nextInt(t.getTrends().length)].getName());
-         
-       if(builder.length() > 280)
+     //Get a global trend
+     Trends t = twit.getPlaceTrends(1);  
+     String trend = t.getTrends()[r.nextInt(t.getTrends().length)].getName();
+     builder.append(getWordnikContent(victim, trend, resp));
+
+     if(builder.length() > 280)
           builder.setLength(280); //Tweets are limited to 280 characters
-
-       twit.updateStatus(builder.toString());
        
-       resp.getWriter().println("Tweet posted: "+builder.toString() +"\n"); 
-       } 
+     //Set the status
+     StatusUpdate status = new StatusUpdate(builder.toString());
+       
+     //Post the status
+     twit.updateStatus(status);
+     resp.getWriter().println("Tweet posted: "+ status.getStatus());
+     } 
 
-   catch(FileNotFoundException e)
-     {
-     resp.getWriter().println("Input file(s) not found \n");
-     e.printStackTrace(resp.getWriter());
-     }
    catch(TwitterException e)
      {
      resp.getWriter().println("Problem with Twitter \n");
      e.printStackTrace(resp.getWriter());
      }
-   catch(KnickerException e)
-    {
-    resp.getWriter().println("Problem with Wordnik \n");
-    e.printStackTrace(resp.getWriter());
-    }
-   catch(Exception e)
-    {
-     resp.getWriter().println("Problem! \n");
-     e.printStackTrace(resp.getWriter());
-     }
    }
- }
-
-
+ 
+ public static String getWordnikContent(String victim, String trend, HttpServletResponse resp) throws IOException
+    {
+     StringBuilder builder = new StringBuilder();
+     try
+        {
+        Properties p = new Properties();
+        InputStream in = UpdateStatusServlet.class.getResourceAsStream("wordnik.properties");
+        p.load(in);
+        System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
+     
+        builder.append("@" + victim + " ");
+        builder.append(WordApi.topExample(WordsApi.randomWord().getWord()).getText());
+        
+        /* Tweets are maximum 280 characters, so trim our sentence appropriately */
+        if(builder.length() > 280) 
+           {
+           if(builder.lastIndexOf(";",220) > 0)
+              builder.setLength(builder.lastIndexOf(";",220)); 
+           else if(builder.lastIndexOf(":",220) > 0)
+              builder.setLength(builder.lastIndexOf(":", 220));  
+           else if(builder.lastIndexOf(",",220) > 0)
+              builder.setLength(builder.lastIndexOf(",", 220));
+           else builder.setLength(220);
+           }   
+        //Append our trend
+        builder.append(" ").append(trend);
+        }
+     catch(FileNotFoundException e)
+        {
+        resp.getWriter().println("Wordnik property file not found \n");
+        e.printStackTrace(resp.getWriter());
+        }
+     catch(KnickerException e)
+        {
+       resp.getWriter().println("Problem with Wordnik \n");
+       e.printStackTrace(resp.getWriter());
+        }  
+     return builder.toString();
+     }
+  }

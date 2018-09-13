@@ -18,6 +18,7 @@ package kerguelenpetrel;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.io.FileNotFoundException;
 import java.util.Properties;
 import java.util.Random;
@@ -60,6 +61,7 @@ public class RespondServlet extends HttpServlet
  public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException 
    {
    StringBuilder builder = new StringBuilder();   
+   PrintWriter out = resp.getWriter();
    resp.setContentType("text/plain; charset=UTF-8");
    
    try 
@@ -100,10 +102,17 @@ public class RespondServlet extends HttpServlet
                builder.append(mention.getUser().getScreenName() + " ");
                
                //Get feed title as content
-               builder.append(getFeedTitle(resp));
+               GetFeed feed = new GetFeed(feedsFile); 
+               builder.append(feed.title());
+               builder.append(separator[(r.nextInt(separator.length))] + " ");
                              
-               //Get a Wordnik trend
-               builder.append(getWordnikTrend(resp));
+               //Add some trends
+               BuildTrend bt = new BuildTrend(resp, twit);
+               //Append a trend from Twitter
+               builder.append(" ").append(bt.twitterTrend());
+                  
+               // Append a Wordnik trend
+               builder.append(" ").append(bt.wordnikTrend()); 
                
                /* Tweets are maximum 280 characters */
                if(builder.length() > 280)
@@ -112,6 +121,7 @@ public class RespondServlet extends HttpServlet
                   builder.append(end[(r.nextInt(end.length))]);
                   }
                }
+               
             //Set the status
             StatusUpdate status = new StatusUpdate(builder.toString());
             
@@ -128,74 +138,28 @@ public class RespondServlet extends HttpServlet
        {
        // Make new ResponseIDentity
        lastPostIdEntity = new Entity("lastPostIDEntity", "ID");
-       lastPostIdEntity.setProperty("lastPostID", "0");
+       lastPostIdEntity.setProperty("lastPostID", "533739405236649984");
        datastore.put(lastPostIdEntity);
        resp.getWriter().println("Made new lastPostId " +lastPostIdEntity.getProperty("lastPostID").toString());
        }
     catch(TwitterException e)
       {
-      resp.getWriter().println("Problem with Twitter \n");
-      e.printStackTrace(resp.getWriter());
+      out.println("Problem with Twitter \n");
+      e.printStackTrace(out);
       }
-    }
- 
- public static String getFeedTitle(HttpServletResponse resp) throws IOException
-    {
-    StringBuilder builder = new StringBuilder();
-      try 
-        {
-        GetFeed feed = new GetFeed(feedsFile); 
-        builder.append(feed.title());
-        builder.append(separator[(r.nextInt(separator.length))] + " ");
-        }
-      catch(FileNotFoundException e)
-        {
-        resp.getWriter().println("Input file(s) not found \n");
-        e.printStackTrace(resp.getWriter());
-        }
-      catch(FeedException e)
-        {
-        resp.getWriter().println("Problem with RSS Feed \n");
-        e.printStackTrace(resp.getWriter());
-        }
-      return builder.toString();
-     }
- 
- public static String getWordnikTrend(HttpServletResponse resp) throws IOException
-    {
-    StringBuilder trend = new StringBuilder();
-    String[] results = new String[2]; //Trend will be made up of 2 words
- 
-    try
-       {
-       Properties p = new Properties();
-       InputStream in = UpdateStatusServlet.class.getResourceAsStream("wordnik.properties");
-       p.load(in);
-       System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
-       }
-    catch(FileNotFoundException e)
-       {
-       resp.getWriter().println("Wordnik property file not found \n");
-       e.printStackTrace(resp.getWriter());
-       }
-    try
-       {
-       for(int i=0; i<results.length;i++)
-          {
-          results[i] = WordsApi.randomWord().getWord();
-          while(results[i].contains("-")) //reject words with dashes
-             results[i] = WordsApi.randomWord().getWord();
-          }
-       //Build the trend
-       trend.append(" #");
-       for(String res : results)
-          trend.append(res);
-       }
-    catch(KnickerException e)
-       {
-       resp.getWriter().println("Problem with Wordnik \n");
-       e.printStackTrace(resp.getWriter());
-       }  
-    return trend.toString(); 
+   catch(FeedException e)
+      {
+      resp.getWriter().println("Problem with RSS Feed \n");
+      e.printStackTrace(out);
+      }
+   catch(FileNotFoundException e)
+      {
+      out.println("Wordnik property file not found \n");
+      }
+   
+   finally 
+      {
+      out.close();  // Always close the output writer
+      } 
     }
   }

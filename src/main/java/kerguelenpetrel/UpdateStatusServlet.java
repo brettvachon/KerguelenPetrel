@@ -18,6 +18,7 @@ package kerguelenpetrel;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PrintWriter;
 import java.net.URL;
 import java.io.FileNotFoundException;
 
@@ -54,111 +55,102 @@ public class UpdateStatusServlet extends HttpServlet
   {
   public static final String feedsFile = "WEB-INF/StaticFiles/feeds";
   public static final String[] separator = new String[] { "?","!",",","-"," " };
+  private static String[] end = { "?","!"," :-)","...","?!"};
   public static final Random r = new Random();
  
   @Override
   public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException 
     {
     StringBuilder builder = new StringBuilder();   
+    
+    PrintWriter out = resp.getWriter();
    
     resp.setContentType("text/plain; charset=UTF-8");
-    resp.getWriter().println("Updating status...");
+    out.println("Updating status...");
     
     try 
       {
       //Append feed title
-      builder.append(getFeedTitle(resp));
+      GetFeed feed = new GetFeed(feedsFile); 
+      builder.append(feed.title());
+      
+      //Add separator at the end of the feed title and before the Wordnik sentence
+      builder.append(separator[(r.nextInt(separator.length))] + " ");
      
       //Append Wordnik example sentence
-      builder.append(getWordnikSentence(resp));
+      Properties p = new Properties();
+      InputStream in = UpdateStatusServlet.class.getResourceAsStream("wordnik.properties");
+      p.load(in);
+      System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
+        
+      builder.append(WordApi.topExample(WordsApi.randomWord().getWord()).getText());
          
-     /* Tweets are maximum 280 characters, so trim our sentence appropriately */
-     if(builder.length() > 280) 
-        {
-        if(builder.lastIndexOf(";",220) > 0)
-           builder.setLength(builder.lastIndexOf(";",220)); 
-        else if(builder.lastIndexOf(":",220) > 0)
-           builder.setLength(builder.lastIndexOf(":", 220));  
-        else if(builder.lastIndexOf(",",220) > 0)
-           builder.setLength(builder.lastIndexOf(",", 220));
-        else builder.setLength(220);
-        }
+      /* Tweets are maximum 280 characters, so trim our sentence appropriately */
+      if(builder.length() > 280) 
+         {
+         if(builder.lastIndexOf(";",220) > 0)
+            builder.setLength(builder.lastIndexOf(";",220)); 
+         else if(builder.lastIndexOf(":",220) > 0)
+            builder.setLength(builder.lastIndexOf(":", 220));  
+         else if(builder.lastIndexOf(",",220) > 0)
+            builder.setLength(builder.lastIndexOf(",", 220));
+         else builder.setLength(220);
+         }
      
-      //Append a Global trend
+      //Set up Twitter
       Twitter twit = TwitterFactory.getSingleton();
-      builder.append(" "+twit.getPlaceTrends(1).getTrends()[r.nextInt(twit.getPlaceTrends(1).getTrends().length)].getName());
-     
-      // Append a Wordnik trend
-      builder.append(getWordnikTrend(resp));
-          
-      if(builder.length() > 280)       
-         builder.setLength(280); //Tweets are limited to 280 characters
-     
-      //Set the status
-      StatusUpdate status = new StatusUpdate(builder.toString());
-     
-      /* Add an image from Flickr for small status */
-      if(builder.length() < 180)
-         status.setMediaIds(addFlickrImg(twit,resp));   
 
-      twit.updateStatus(status);
-      resp.getWriter().println("Tweet posted: "+ status.getStatus());
-      }
+       //Append a trend from Twitter
+       BuildTrend bt = new BuildTrend(resp, twit);
+       builder.append(" ").append(bt.twitterTrend());
+          
+       // Append a Wordnik trend
+       builder.append(" ").append(bt.wordnikTrend()); 
+      
+       /* Tweets are maximum 280 characters */
+       if(builder.length() > 280)
+          {
+          builder.setLength(builder.lastIndexOf(" ", 270));  
+          builder.append(end[(r.nextInt(end.length))]);
+          }
+     
+       //Set the status
+       StatusUpdate status = new StatusUpdate(builder.toString());
+     
+       /* Add an image from Flickr for small status */
+       if(builder.length() < 220)
+          status.setMediaIds(addFlickrImg(twit,resp));   
+
+       twit.updateStatus(status);
+       out.println("Tweet posted: "+ status.getStatus());
+       }
  
-     catch(TwitterException e)
+      catch(TwitterException e)
+        {
+       out.println("Problem with Twitter \n");
+        e.printStackTrace(out);
+        }
+    catch(FileNotFoundException e)
        {
-       resp.getWriter().println("Problem with Twitter \n");
-       e.printStackTrace(resp.getWriter());
+       out.println("Wordnik property file not found \n");
+       e.printStackTrace(out);
        }
+     catch(KnickerException e)
+       {
+      out.println("Problem with Wordnik \n");
+      e.printStackTrace(out);
+      }  
+    catch(FeedException e)
+         {
+         out.println("Problem with RSS Feed \n");
+         e.printStackTrace(out);
+         }
+      finally 
+      {
+      out.close();  // Always close the output writer
+      } 
     }
- 
-    public static String getFeedTitle(HttpServletResponse resp) throws IOException
-      {
-      StringBuilder builder = new StringBuilder();
-        try 
-          {
-          GetFeed feed = new GetFeed(feedsFile); 
-          builder.append(feed.title());
-          builder.append(separator[(r.nextInt(separator.length))] + " ");
-          }
-        catch(FileNotFoundException e)
-          {
-          resp.getWriter().println("Input file(s) not found \n");
-          e.printStackTrace(resp.getWriter());
-          }
-        catch(FeedException e)
-          {
-          resp.getWriter().println("Problem with RSS Feed \n");
-          e.printStackTrace(resp.getWriter());
-          }
-       return builder.toString();
-       }
-    
-    public static String getWordnikSentence(HttpServletResponse resp) throws IOException
-      {
-       StringBuilder builder = new StringBuilder();
-       try
-          {
-          Properties p = new Properties();
-          InputStream in = UpdateStatusServlet.class.getResourceAsStream("wordnik.properties");
-          p.load(in);
-          System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
-       
-          builder.append(WordApi.topExample(WordsApi.randomWord().getWord()).getText());
-          }
-       catch(FileNotFoundException e)
-          {
-          resp.getWriter().println("Wordnik property file not found \n");
-          e.printStackTrace(resp.getWriter());
-          }
-       catch(KnickerException e)
-          {
-         resp.getWriter().println("Problem with Wordnik \n");
-         e.printStackTrace(resp.getWriter());
-          }  
-       return builder.toString();
-      }
-    
+  
     public static long[] addFlickrImg(Twitter twit, HttpServletResponse resp) throws IOException, TwitterException
       {
       long[] mediaID = new long[1];
@@ -218,47 +210,9 @@ public class UpdateStatusServlet extends HttpServlet
          }
       catch(FeedException e)
          {
-         resp.getWriter().println("Problem with RSS Feed \n");
+         resp.getWriter().println("Problem with Flickr RSS Feed \n");
          e.printStackTrace(resp.getWriter());
          }
       return mediaID;
        }
-    
-    public static String getWordnikTrend(HttpServletResponse resp) throws IOException
-       {
-       StringBuilder trend = new StringBuilder();
-       String[] results = new String[2]; //Trend will be made up of 2 words
-    
-       try
-          {
-          Properties p = new Properties();
-          InputStream in = UpdateStatusServlet.class.getResourceAsStream("wordnik.properties");
-          p.load(in);
-          System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
-          }
-       catch(FileNotFoundException e)
-          {
-          resp.getWriter().println("Wordnik property file not found \n");
-          e.printStackTrace(resp.getWriter());
-          }
-       try
-          {
-          for(int i=0; i<results.length;i++)
-             {
-             results[i] = WordsApi.randomWord().getWord();
-             while(results[i].contains("-")) //reject words with dashes
-                results[i] = WordsApi.randomWord().getWord();
-             }
-          //Build the trend
-          trend.append(" #");
-          for(String res : results)
-             trend.append(res);
-          }
-       catch(KnickerException e)
-          {
-          resp.getWriter().println("Problem with Wordnik \n");
-          e.printStackTrace(resp.getWriter());
-          }  
-       return trend.toString(); 
-       }     
-     }
+   }

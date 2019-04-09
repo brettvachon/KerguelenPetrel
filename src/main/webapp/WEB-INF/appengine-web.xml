@@ -16,5 +16,8 @@
   <resource-files>
     <include path="WEB-INF/StaticFiles/*" />
   </resource-files> 
-
+ 
+  <!-- Fix Unknown Host error when using ROME -->
+  <url-stream-handler>urlfetch</url-stream-handler>
+  
 </appengine-web-app>

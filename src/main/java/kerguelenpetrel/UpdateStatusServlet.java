@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017 daloonik
+ * Copyright (c) 2019 daloonik
  *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
@@ -65,28 +65,48 @@ public class UpdateStatusServlet extends HttpServlet
     
     PrintWriter out = resp.getWriter();
    
-    resp.setContentType("text/plain; charset=UTF-8");
-    out.println("Updating status...");
+    resp.setContentType("text/html; charset=UTF-8");
     
     try 
       {
       //Append feed title
+      out.println("Updating status...<br />");
       GetFeed feed = new GetFeed(feedsFile); 
       builder.append(feed.title());
       
       //Add separator at the end of the feed title and before the Wordnik sentence
       builder.append(separator[(r.nextInt(separator.length))] + " ");
-     
-      //Append Wordnik example sentence
-      Properties p = new Properties();
-      InputStream in = UpdateStatusServlet.class.getResourceAsStream("wordnik.properties");
-      p.load(in);
-      System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
+      }
+    
+    catch(FeedException e)
+       {
+       out.println("Problem generating Feed Title with RSS Feed <br />");
+       e.printStackTrace(out);
+       }
+          
+     try
+        {     
+        //Append Wordnik example sentence
+        Properties p = new Properties();
+        InputStream in = UpdateStatusServlet.class.getResourceAsStream("wordnik.properties");
+        p.load(in);
+        System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
         
-      builder.append(WordApi.topExample(WordsApi.randomWord().getWord()).getText());
-         
+        builder.append(WordApi.topExample(WordsApi.randomWord().getWord()).getText());
+        }
+     catch(FileNotFoundException e)
+        {
+        out.println("Wordnik property file not found <br />");
+        e.printStackTrace(out);
+        }
+     catch(KnickerException e)
+        {
+       out.println("Problem appending Wordnik example sentence <br />");
+       e.printStackTrace(out);
+       } 
+     
       /* Tweets are maximum 280 characters, so trim our sentence appropriately */
-      if(builder.length() > 280) 
+   if(builder.length() > 280) 
          {
          if(builder.lastIndexOf(";",220) > 0)
             builder.setLength(builder.lastIndexOf(";",220)); 
@@ -97,32 +117,35 @@ public class UpdateStatusServlet extends HttpServlet
          else builder.setLength(220);
          }
      
-      //Set up Twitter
-      Twitter twit = TwitterFactory.getSingleton();
+    try
+         {
+         //Set up Twitter
+         Twitter twit = TwitterFactory.getSingleton();
 
-       //Append a trend from Twitter
-       BuildTrend bt = new BuildTrend(resp, twit);
-       builder.append(" ").append(bt.twitterTrend());
+         //Append a trend from Twitter
+         BuildTrend bt = new BuildTrend(resp, twit);
+         builder.append(" ").append(bt.twitterTrend());
           
-       // Append a Wordnik trend
-       builder.append(" ").append(bt.wordnikTrend()); 
+         // Append a Wordnik trend
+         builder.append(" ").append(bt.wordnikTrend()); 
       
        /* Tweets are maximum 280 characters */
-       if(builder.length() > 280)
+        if(builder.length() > 280)
           {
           builder.setLength(builder.lastIndexOf(" ", 270));  
           builder.append(end[(r.nextInt(end.length))]);
           }
-     
+
        //Set the status
        StatusUpdate status = new StatusUpdate(builder.toString());
      
-       /* Add an image from Flickr for small status */
-       if(builder.length() < 220)
+       // Add an image from Flickr for small status 
+       if(builder.length() < 120)
           status.setMediaIds(addFlickrImg(twit,resp));   
 
        twit.updateStatus(status);
-       out.println("Tweet posted: "+ status.getStatus());
+       out.println("Tweet posted! <br /> Tweet : ");
+       out.println(status.getStatus());
        }
  
       catch(TwitterException e)
@@ -130,21 +153,7 @@ public class UpdateStatusServlet extends HttpServlet
        out.println("Problem with Twitter \n");
         e.printStackTrace(out);
         }
-    catch(FileNotFoundException e)
-       {
-       out.println("Wordnik property file not found \n");
-       e.printStackTrace(out);
-       }
-     catch(KnickerException e)
-       {
-      out.println("Problem with Wordnik \n");
-      e.printStackTrace(out);
-      }  
-    catch(FeedException e)
-         {
-         out.println("Problem with RSS Feed \n");
-         e.printStackTrace(out);
-         }
+ 
       finally 
       {
       out.close();  // Always close the output writer

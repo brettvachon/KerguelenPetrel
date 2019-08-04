@@ -1,11 +1,11 @@
 # KerguelenPetrel
 ## Twitter bot
 
-Kerguelen Petrel is a Twitter bot that uses an RSS feed and Wordnik to update a Twitter Status and bother a Twitter user. The bot can also respond to @ messages and can follow or unfollow someone.
+Kerguelen Petrel is a Twitter bot that uses an RSS feed to update a Twitter Status and bother a Twitter user. The bot can also respond to @ messages and can follow or unfollow someone.
 
-The bot creates tweets by using content from either an RSS Feed title, an RSS Feed description, a Wordnik sentence, or a combination of those. The bot can also add hashtags to a Tweet which are either trends on Twitter or invented trends made by combining two words.
+The bot creates tweets by using content from either an RSS Feed title or an RSS Feed description. The bot can also add hashtags to a Tweet generated from Twitter.
 
-This bot runs on Google App Engine. The libraries used are Rome 1.9.0, JDom 2.0.6, Knicker 2.4.1 and Twitter4j 4.0.7. This bot is licenced under the Apache Licence.
+This bot runs on Google App Engine. The libraries used are Rome 1.9.0, JDom 2.0.6, <s>Knicker 2.4.1</s> and Twitter4j 4.0.7. This bot is licenced under the Apache Licence.
 
 List of servlets:
 
@@ -21,8 +21,8 @@ You can modify the frequency of the bot's performance of each of those Servlets 
  
  ## Setting up the bot
 1. You will need to create an app at https://developer.twitter.com. 
-2. Next click on "Keys and Access Tokens" and get your API keys and Access Tokens for the app that you just created. Place the keys in the `twitter4j.properties` file.
-3. You will also need a Wordnik API key from http://developer.wordnik.com . When you receive your API key place it in the `wordnik.properties` file.
+2. Next click on "Keys and Access Tokens" and get your API keys and Access Tokens for the app that you just created. 
+3. Place the keys in the `twitter4j.properties` file.
 4. Create a Google App Engine project at https://console.developers.google.com/cloud-resource-manager 
 5. Deploy the bot to GAE.
 

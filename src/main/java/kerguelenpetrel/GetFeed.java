@@ -68,9 +68,17 @@ public class GetFeed
    this.feedURL = new GetLine(feedURLfile);
    this.reader = new XmlReader(new URL(feedURL.line()));
    this.feed = new SyndFeedInput().build(reader);
+   int ind;
    
    //Get a random entry
-   int ind = rand.nextInt(feed.getEntries().size()); 
+   try
+      {
+         ind = rand.nextInt(feed.getEntries().size()); 
+      }
+   catch(IllegalArgumentException e)
+      {
+         ind = 1;
+      }
    this.entry = (SyndEntry)feed.getEntries().get(ind);
    }
  }

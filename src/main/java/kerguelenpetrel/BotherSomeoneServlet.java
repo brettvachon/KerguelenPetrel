@@ -17,25 +17,20 @@
 package kerguelenpetrel;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
-import java.io.FileNotFoundException;
 
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
 import twitter4j.StatusUpdate;
 
-import java.util.Properties;
 import java.util.Random;
 
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import net.jeremybrooks.knicker.KnickerException;
-import net.jeremybrooks.knicker.WordApi;
-import net.jeremybrooks.knicker.WordsApi;
+import com.rometools.rome.io.FeedException;
 
 @SuppressWarnings("serial")
 
@@ -43,6 +38,7 @@ public class BotherSomeoneServlet extends HttpServlet
  {
  public static final long cursor = -1;
  public static final Random r = new Random();
+ public static final String feedsFile = "WEB-INF/StaticFiles/feeds";
 
  @Override
  public void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException 
@@ -51,7 +47,8 @@ public class BotherSomeoneServlet extends HttpServlet
    PrintWriter out = resp.getWriter();
    long[] friendIDs, victimIDs;
 
-   resp.setContentType("text/plain; charset=UTF-8");
+   resp.setContentType("text/plain; charset=UTF-8");       
+    
    try 
      {
      //Get the Twitter object
@@ -79,38 +76,29 @@ public class BotherSomeoneServlet extends HttpServlet
      String victim = twit.showUser(victimIDs[r.nextInt(victimIDs.length)]).getScreenName();
      builder.append("@" + victim + " ");
 
-     //Append Wordnik example sentence as content
-     Properties p = new Properties();
-     InputStream in = UpdateStatusServlet.class.getResourceAsStream("wordnik.properties");
-     p.load(in);
-     System.setProperty("WORDNIK_API_KEY", p.getProperty("WORDNIK_API_KEY"));
-     builder.append(WordApi.topExample(WordsApi.randomWord().getWord()).getText());
-     
-
+     //Append feed description
+     GetFeed feed = new GetFeed(feedsFile); 
+     builder.append(feed.description());
+   
      if(builder.length() > 280)
           builder.setLength(280); //Tweets are limited to 280 characters
        
      //Set the status
      StatusUpdate status = new StatusUpdate(builder.toString());
        
-     //Post the status
+     //Post the status to out
      twit.updateStatus(status);
-     resp.getWriter().println("Tweet posted: "+ status.getStatus());
+     out.println("Tweet posted: "+ status.getStatus());
      } 
-
    catch(TwitterException e)
      {
      out.println("Problem with Twitter \n");
      e.printStackTrace(resp.getWriter());
      }
-   catch(KnickerException e)
+   catch(FeedException e)
       {
-     out.println("Problem with Wordnik \n");
-     e.printStackTrace(resp.getWriter());
-      }
-   catch(FileNotFoundException e)
-      {
-      out.println("Wordnik property file not found \n");
+      out.println("Problem with RSS Feed <br />");
+      e.printStackTrace(out);
       }
    finally 
       {

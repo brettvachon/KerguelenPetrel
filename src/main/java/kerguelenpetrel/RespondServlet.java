@@ -17,10 +17,7 @@
 package kerguelenpetrel;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.PrintWriter;
-import java.io.FileNotFoundException;
-import java.util.Properties;
 import java.util.Random;
 
 import twitter4j.Twitter;
@@ -40,9 +37,6 @@ import com.google.appengine.api.datastore.Entity;
 import com.google.appengine.api.datastore.EntityNotFoundException;
 import com.google.appengine.api.datastore.KeyFactory;
 
-import net.jeremybrooks.knicker.KnickerException;
-import net.jeremybrooks.knicker.WordsApi;
-
 import com.rometools.rome.io.FeedException;
 
 @SuppressWarnings("serial")
@@ -53,7 +47,6 @@ public class RespondServlet extends HttpServlet
  private static Entity lastPostIdEntity;
  private static long lastPostId = 0;
  public static final String feedsFile = "WEB-INF/StaticFiles/feeds";
- private static String[] end = { "?","!"," :-)","...","?!"};
  public static final String[] separator = new String[] { "?","!",",","-"," " };
  public static final Random r = new Random();
  
@@ -75,7 +68,7 @@ public class RespondServlet extends HttpServlet
 
      if(mentions.size() == 0)
         {
-       resp.getWriter().println("No mentions so far...\n");
+       out.println("No mentions so far...");
        return;
         }
      
@@ -104,22 +97,10 @@ public class RespondServlet extends HttpServlet
                //Get feed title as content
                GetFeed feed = new GetFeed(feedsFile); 
                builder.append(feed.title());
-               builder.append(separator[(r.nextInt(separator.length))] + " ");
-                             
-               //Add some trends
-               BuildTrend bt = new BuildTrend(resp, twit);
-               //Append a trend from Twitter
-               builder.append(" ").append(bt.twitterTrend());
-                  
-               // Append a Wordnik trend
-               builder.append(" ").append(bt.wordnikTrend()); 
-               
+           
                /* Tweets are maximum 280 characters */
                if(builder.length() > 280)
-                  {
-                  builder.setLength(builder.lastIndexOf(" ", 270));  
-                  builder.append(end[(r.nextInt(end.length))]);
-                  }
+                  builder.setLength(280);
                }
                
             //Set the status
@@ -127,7 +108,7 @@ public class RespondServlet extends HttpServlet
             
             //Post the status
             twit.updateStatus(status);
-            resp.getWriter().println("Tweet posted: "+ status.getStatus());
+            out.println("Tweet posted: "+ status.getStatus());
             }
          }
        //Save last post ID
@@ -138,9 +119,9 @@ public class RespondServlet extends HttpServlet
        {
        // Make new ResponseIDentity
        lastPostIdEntity = new Entity("lastPostIDEntity", "ID");
-       lastPostIdEntity.setProperty("lastPostID", "533739405236649984");
+       lastPostIdEntity.setProperty("lastPostID", "0");
        datastore.put(lastPostIdEntity);
-       resp.getWriter().println("Made new lastPostId " +lastPostIdEntity.getProperty("lastPostID").toString());
+       out.println("Made new lastPostId " +lastPostIdEntity.getProperty("lastPostID").toString());
        }
     catch(TwitterException e)
       {
@@ -151,10 +132,6 @@ public class RespondServlet extends HttpServlet
       {
       resp.getWriter().println("Problem with RSS Feed \n");
       e.printStackTrace(out);
-      }
-   catch(FileNotFoundException e)
-      {
-      out.println("Wordnik property file not found \n");
       }
    
    finally 

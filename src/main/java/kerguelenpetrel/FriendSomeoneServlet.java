@@ -75,6 +75,11 @@ public class FriendSomeoneServlet extends HttpServlet
         StatusUpdate status = new StatusUpdate(writeToFriend(friend.getScreenName(), resp));
         twit.updateStatus(status);
         resp.getWriter().println("Tweet posted: "+ status.getStatus());
+        
+        //Retweet a random tweet from our new friend
+        List<Status> tweets = twit.getUserTimeline(friendID); // Get the first 20 tweets of our new friend
+        Status randomStatus = tweets.get(new Random().nextInt(tweets.size()));    
+        twit.retweetStatus(randomStatus.getId()); 
         }
      catch(TwitterException e)
         {

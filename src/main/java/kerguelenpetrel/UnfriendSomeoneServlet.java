@@ -54,6 +54,11 @@ public class UnfriendSomeoneServlet extends HttpServlet
          twit.destroyFriendship(unfriend.getId());
          resp.getWriter().println("Successfully unfollowed @"+unfriend.getScreenName());
          resp.getWriter().println("\n");
+         
+         //Retweet a random tweet from our former friend
+         List<Status> tweets = twit.getUserTimeline(unfriendID); // Get the first 20 tweets of our new friend
+         Status randomStatus = tweets.get(new Random().nextInt(tweets.size()));
+         twit.retweetStatus(randomStatus.getId()); 
          }
       catch(TwitterException e)
          {

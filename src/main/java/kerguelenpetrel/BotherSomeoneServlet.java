@@ -22,8 +22,11 @@ import java.io.PrintWriter;
 import twitter4j.Twitter;
 import twitter4j.TwitterException;
 import twitter4j.TwitterFactory;
+import twitter4j.User;
+import twitter4j.Status;
 import twitter4j.StatusUpdate;
 
+import java.util.List;
 import java.util.Random;
 
 import javax.servlet.http.HttpServlet;
@@ -46,6 +49,7 @@ public class BotherSomeoneServlet extends HttpServlet
    StringBuilder builder = new StringBuilder();
    PrintWriter out = resp.getWriter();
    long[] friendIDs, victimIDs;
+   User victim;
 
    resp.setContentType("text/plain; charset=UTF-8");       
     
@@ -73,8 +77,8 @@ public class BotherSomeoneServlet extends HttpServlet
         }
        
      //Write to our victim
-     String victim = twit.showUser(victimIDs[r.nextInt(victimIDs.length)]).getScreenName();
-     builder.append("@" + victim + " ");
+     victim = twit.showUser(victimIDs[r.nextInt(victimIDs.length)]);
+     builder.append("@" + victim.getScreenName() + " ");
 
      //Append feed description
      GetFeed feed = new GetFeed(feedsFile); 
@@ -88,7 +92,14 @@ public class BotherSomeoneServlet extends HttpServlet
        
      //Post the status to out
      twit.updateStatus(status);
-     out.println("Tweet posted: "+ status.getStatus());
+     out.println("Tweet posted: "+ status.getStatus() +" \n");
+     
+     //Favorite one of the first 20 tweets of our victim
+     List<Status> tweets = twit.getUserTimeline(victim.getId()); 
+     
+     Status randomStatus = tweets.get(new Random().nextInt(tweets.size()));
+     Status favStatus = twit.createFavorite(randomStatus.getId());
+     out.println("Added favourite to status "+ favStatus.getId() +" \n");
      } 
    catch(TwitterException e)
      {
